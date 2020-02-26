@@ -47,14 +47,30 @@ class Reconciler:
 
         #Continue checks for trials with summary files.
         else:
-          
+         
           #Read in the two summary sheets and begin transforming them into useful dataframes
-          summaryTrapData = pandas.read_excel(currentPath + summaryFileName, sheet_name=0, header=None)
-          print(summaryTrapData[2][28:])
+ 
+          #Read in the trap data summary sheet, and transform it into a clean dataframe with trapIDs 
+          #and observation dates
+          summaryTrapCounts = pandas.read_excel(currentPath + summaryFileName, sheet_name=0, header=None)
+          trapCounts = summaryTrapCounts.iloc[28:, 2:]
+          transformedTrapCountsSummary = pandas.DataFrame(trapCounts).reset_index(drop=True)
+         
+          trapCountDates = summaryTrapCounts.iloc[15, 3:].copy().tolist()
+          newColumnNames = ['trapID'] + trapCountDates
+          transformedTrapCountsSummary.columns = newColumnNames
 
 
+          #Read in the plant data summary sheet, then split the counts and damages into separate dataframes
           summaryPlantData = pandas.read_excel(currentPath + summaryFileName, sheet_name=1, header=None)
-          print(summaryPlantData.head(4))
+          
+          daminsRowMask = [True, True, True, True] + list(summaryPlantData.iloc[18, 4:] == 'DAMINS')
+
+          print(summaryPlantData.loc[:, daminsRowMask])
+
+
+
+          #print(summaryPlantData.iloc[18, 4:] == 'COUNT')
            
           
 
