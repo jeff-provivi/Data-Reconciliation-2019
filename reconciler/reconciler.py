@@ -4,6 +4,7 @@
 import os
 import re
 import pandas
+import numpy
 
 class Reconciler:
     def __init__(self):
@@ -63,10 +64,22 @@ class Reconciler:
 
           #Read in the plant data summary sheet, then split the counts and damages into separate dataframes
           summaryPlantData = pandas.read_excel(currentPath + summaryFileName, sheet_name=1, header=None)
-          
-          daminsRowMask = [True, True, True, True] + list(summaryPlantData.iloc[18, 4:] == 'DAMINS')
-
-          print(summaryPlantData.loc[:, daminsRowMask])
+            
+          #Add transect labels to all rows
+          transectID = None
+          for index, row in summaryPlantData.iterrows():
+            if index > 27:
+              if not numpy.isnan(row[2]):
+                transectID = row[2]
+              elif numpy.isnan(row[2]) and not numpy.isnan(row[3]):
+                row[2] = transectID
+         
+          #Get a mask of which rows refer to damages, then use that to create a damage only dataframe 
+          daminsRowMask = list(summaryPlantData.iloc[18, 4:] == 'DAMINS')
+          transformedDamagesSummary = summaryPlantData.loc[28:, [False, False, True, True] + daminsRowMask].reset_index(drop=True)
+       
+          damagesDates = summaryPlantData.iloc[15, 4:]
+          print(damagesDates)
 
 
 
