@@ -3,6 +3,7 @@
 #Imports (obviously, this will need to be changed)
 import os
 import re
+import pandas
 
 class Reconciler:
     def __init__(self):
@@ -20,7 +21,7 @@ class Reconciler:
           trialIDs.append(subdirectory)
 
       #Run the reconciliations for each trial id
-      for trialID in trialIDs:
+      for trialID in trialIDs[0:1]:
         currentTrial = trialID
         currentPath = inputDirectoryPath + trialID + '/'
 
@@ -33,18 +34,27 @@ class Reconciler:
           if bool(re.match(re.compile("19-MX.+xlsx"), fileName)):
             dataFiles.append(fileName)
 
-        #Check for the presence of a COMPLETO file
+        #Check for the presence of a COMPLETO file. If not present, print error and exit. Continue otherwise.
         hasSummary = False
+        summaryFileName = ''
         for dataFile in dataFiles:
           if bool(re.match(re.compile("19-MX.+COMPLETO.xlsx"), dataFile)):
+            summaryFileName = dataFile
             hasSummary = True
 
-        if hasSummary:
-          print(currentTrial + " has a COMPLETO file")
-          #Add more conditionally executed checks
-
-        else:
+        if hasSummary == False:
           print(currentTrial + " does not have a COMPLETO file")
+
+        #Continue checks for trials with summary files.
+        else:
+          
+          #Read in the two summary sheets and begin transforming them into useful dataframes
+          summaryTrapData = pandas.read_excel(currentPath + summaryFileName, sheet_name=0, header=None)
+          print(summaryTrapData[2][28:])
+
+
+          summaryPlantData = pandas.read_excel(currentPath + summaryFileName, sheet_name=1, header=None)
+          print(summaryPlantData.head(4))
            
           
 
