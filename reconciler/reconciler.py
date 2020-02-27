@@ -26,7 +26,7 @@ class Reconciler:
       #Run the reconciliations for each trial id
       ############################################################################################ 
       ############################################################################################ 
-      for trialID in trialIDs[0:1]:
+      for trialID in trialIDs:
         print('\n \nTRIAL ID: ' + trialID)
         currentTrial = trialID
         currentPath = inputDirectoryPath + trialID + '/'
@@ -67,7 +67,7 @@ class Reconciler:
           trapCounts = summaryTrapCounts.iloc[28:, 2:]
           transformedTrapCountsSummary = pandas.DataFrame(trapCounts).reset_index(drop=True)
          
-          trapCountDates = summaryTrapCounts.iloc[15, 3:].copy().tolist()
+          trapCountDates = summaryTrapCounts.loc[summaryTrapCounts[0].str.contains('Date', na=False), 3:].iloc[0, 0:].tolist()
           newColumnNames = ['trapID'] + trapCountDates
           transformedTrapCountsSummary.columns = newColumnNames
          
@@ -117,7 +117,7 @@ class Reconciler:
           #Load and reconcile all the indvidual observation files against the loaded summary data 
           ######################################################################################## 
           ########################################################################################
-          for dataFile in dataFiles[0:1]:
+          for dataFile in dataFiles:
             if dataFile != summaryFileName:
               print('READING FILE: ' + dataFile)
 
@@ -183,8 +183,19 @@ class Reconciler:
               #Check that the observation dates are in the summary file
               for date in list(transformedTrapCounts.columns)[1:]:
                 if not (date in list(transformedTrapCountsSummary.columns)):
-                  print('MESSAGE NEEDS DEVELOPED')          
-   
+                  print('ERROR: In trial ' + currentTrial + ' and in file ' + dataFile + ': date ' + date + ' not in ' + summaryFileName)
+
+                #Check that all observations values match
+                else:
+                  for index, row in transformedTrapCounts.iterrows():
+                    observedValue = row[date]
+                    trapID = row['trapID']
+
+                    summaryValue = list(transformedTrapCountsSummary.loc[transformedTrapCountsSummary['trapID'] == trapID, date])[0] 
+
+                    #print('Observed: ', observedValue, ' Summary: ', summaryValue)
+                    if not (observedValue == summaryValue):
+                      print('ERROR: Discrepancy between ' + summaryFileName + ' and ' + dataFile + ' at trapID ' + trapID + ' and date ' + date)
 
               
 
