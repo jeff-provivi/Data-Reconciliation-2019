@@ -22,12 +22,13 @@ class Reconciler:
       for subdirectory in subdirectories:
         if bool(re.match(re.compile("19-MX.+-WC"), subdirectory)):
           trialIDs.append(subdirectory)
-
+      print(trialIDs)
 
       #Run the reconciliations for each trial id
       ############################################################################################ 
       ############################################################################################ 
-      for trialID in trialIDs[0:1]:
+      for trialID in trialIDs:
+        print('\n \nTRIAL ID: ' + trialID)
         currentTrial = trialID
         currentPath = inputDirectoryPath + trialID + '/'
 
@@ -46,7 +47,7 @@ class Reconciler:
         hasSummary = False
         summaryFileName = ''
         for dataFile in dataFiles:
-          if bool(re.match(re.compile("19-MX.+COMPLETO.xlsx"), dataFile)):
+          if bool(re.match(re.compile("19-MX.+COMPLET..xlsx"), dataFile)):
             summaryFileName = dataFile
             hasSummary = True
 
@@ -58,6 +59,7 @@ class Reconciler:
         ########################################################################################## 
         ########################################################################################## 
         else:
+          print('SUMMARY FILE: ' + summaryFileName)
  
           #Read in the trap data summary sheet, and transform it into a clean dataframe with trapIDs 
           #and observation dates
@@ -103,8 +105,9 @@ class Reconciler:
           #Load and reconcile all the indvidual observation files against the loaded summary data 
           ######################################################################################## 
           ########################################################################################
-          for dataFile in dataFiles[0:1]:
+          for dataFile in dataFiles:
             if dataFile != summaryFileName:
+              print('READING FILE: ' + dataFile)
 
               #Read in the trap count sheet and transform it into a clean dataframe
               ######################################################################################## 
@@ -119,18 +122,15 @@ class Reconciler:
               #Read in the plant data sheet, then split the counts and damages into separate dataframes
               ######################################################################################## 
               rawPlantData = pandas.read_excel(currentPath + dataFile, sheet_name=1, header=None)
-              print(rawPlantData.iloc[26: , 2:])
             
               #Add transect labels to all rows
-              observationTransectID = None
+              transectID = None
               for index, row in rawPlantData.iterrows():
                 if index > 25:
                   if not numpy.isnan(row[2]):
-                    observationTransectID = row[2]
+                    transectID = row[2]
                   elif numpy.isnan(row[2]) and not numpy.isnan(row[3]):
-                    row[2] = observationTransectID
-                print(row[2], row[3])
-              print(rawPlantData.iloc[26: , 2:])
+                    rawPlantData.iloc[index, 2] = transectID
          
               #Get a mask of which rows refer to damages, then use that to create a damage only dataframe 
               daminsRowMask = list(rawPlantData.iloc[16, 4:] == 'DAMINS')
@@ -139,16 +139,14 @@ class Reconciler:
               damagesDates = rawPlantData.iloc[13, 4:][daminsRowMask].tolist()
               newColumnNames = ['transectID', 'plant number'] + damagesDates
               transformedDamages.columns = newColumnNames
-              print(transformedDamages)
 
               #Get a mask of which rows refer to counts, then use that to create a counts only dataframe 
-              #countRowMask = list(summaryPlantData.iloc[18, 4:] == 'COUNT')
-              #transformedPlantCountSummary = summaryPlantData.loc[28:, [False, False, True, True] + countRowMask].reset_index(drop=True)
+              countRowMask = list(rawPlantData.iloc[16, 4:] == 'COUNT')
+              transformedPlantCount = rawPlantData.loc[26:, [False, False, True, True] + countRowMask].reset_index(drop=True)
        
-              #plantCountDates = summaryPlantData.iloc[15, 4:][countRowMask].tolist()
-              #newColumnNames = ['transectID', 'plant number'] + plantCountDates
-              #transformedPlantCountSummary.columns = newColumnNames
+              plantCountDates = rawPlantData.iloc[13, 4:][countRowMask].tolist()
+              newColumnNames = ['transectID', 'plant number'] + plantCountDates
+              transformedPlantCount.columns = newColumnNames
 
-             
  
 
