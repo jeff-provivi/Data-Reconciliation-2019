@@ -22,12 +22,11 @@ class Reconciler:
       for subdirectory in subdirectories:
         if bool(re.match(re.compile("19-MX.+-WC"), subdirectory)):
           trialIDs.append(subdirectory)
-      print(trialIDs)
 
       #Run the reconciliations for each trial id
       ############################################################################################ 
       ############################################################################################ 
-      for trialID in trialIDs:
+      for trialID in trialIDs[0:1]:
         print('\n \nTRIAL ID: ' + trialID)
         currentTrial = trialID
         currentPath = inputDirectoryPath + trialID + '/'
@@ -71,6 +70,10 @@ class Reconciler:
           trapCountDates = summaryTrapCounts.iloc[15, 3:].copy().tolist()
           newColumnNames = ['trapID'] + trapCountDates
           transformedTrapCountsSummary.columns = newColumnNames
+         
+          #Trim by removing any columns or rows with all NaN values
+          transformedTrapCountsSummary.dropna(how='all', inplace=True)
+          transformedTrapCountsSummary.dropna(how='all', axis='columns', inplace=True)
 
           #Read in the plant data summary sheet, then split the counts and damages into separate dataframes
           ######################################################################################## 
@@ -93,6 +96,11 @@ class Reconciler:
           newColumnNames = ['transectID', 'plant number'] + damagesDates
           transformedDamagesSummary.columns = newColumnNames
 
+          #Trim by removing any columns or rows with all NaN values
+          transformedDamagesSummary.dropna(how='all', inplace=True)
+          transformedDamagesSummary.dropna(how='all', axis='columns', inplace=True)
+
+
           #Get a mask of which rows refer to counts, then use that to create a counts only dataframe 
           countRowMask = list(summaryPlantData.iloc[18, 4:] == 'COUNT')
           transformedPlantCountSummary = summaryPlantData.loc[28:, [False, False, True, True] + countRowMask].reset_index(drop=True)
@@ -101,11 +109,15 @@ class Reconciler:
           newColumnNames = ['transectID', 'plant number'] + plantCountDates
           transformedPlantCountSummary.columns = newColumnNames
 
-          
+          #Trim by removing any columns or rows with all NaN values
+          transformedPlantCountSummary.dropna(how='all', inplace=True)
+          transformedPlantCountSummary.dropna(how='all', axis='columns', inplace=True)
+
+         
           #Load and reconcile all the indvidual observation files against the loaded summary data 
           ######################################################################################## 
           ########################################################################################
-          for dataFile in dataFiles:
+          for dataFile in dataFiles[0:1]:
             if dataFile != summaryFileName:
               print('READING FILE: ' + dataFile)
 
@@ -118,6 +130,10 @@ class Reconciler:
               trapCountDates = rawTrapCounts.iloc[13, 3:].tolist()
               newColumnNames = ['trapID'] + trapCountDates
               transformedTrapCounts.columns = newColumnNames
+
+              #Trim by removing any columns or rows with all NaN values
+              transformedTrapCounts.dropna(how='all', inplace=True)
+              transformedTrapCounts.dropna(how='all', axis='columns', inplace=True)
 
               #Read in the plant data sheet, then split the counts and damages into separate dataframes
               ######################################################################################## 
@@ -140,6 +156,11 @@ class Reconciler:
               newColumnNames = ['transectID', 'plant number'] + damagesDates
               transformedDamages.columns = newColumnNames
 
+              #Trim by removing any columns or rows with all NaN values
+              transformedDamages.dropna(how='all', inplace=True)
+              transformedDamages.dropna(how='all', axis='columns', inplace=True)
+
+
               #Get a mask of which rows refer to counts, then use that to create a counts only dataframe 
               countRowMask = list(rawPlantData.iloc[16, 4:] == 'COUNT')
               transformedPlantCount = rawPlantData.loc[26:, [False, False, True, True] + countRowMask].reset_index(drop=True)
@@ -147,6 +168,25 @@ class Reconciler:
               plantCountDates = rawPlantData.iloc[13, 4:][countRowMask].tolist()
               newColumnNames = ['transectID', 'plant number'] + plantCountDates
               transformedPlantCount.columns = newColumnNames
+
+              #Trim by removing any columns or rows with all NaN values
+              transformedPlantCount.dropna(how='all', inplace=True)
+              transformedPlantCount.dropna(how='all', axis='columns', inplace=True)
+
+              #Reconcile the observation data against the summary data
+              ######################################################################################## 
+              ######################################################################################## 
+
+              #Reconciling the trap counts
+              ######################################################################################## 
+              
+              #Check that the observation dates are in the summary file
+              for date in list(transformedTrapCounts.columns)[1:]:
+                if not (date in list(transformedTrapCountsSummary.columns)):
+                  print('MESSAGE NEEDS DEVELOPED')          
+   
+
+              
 
  
 
